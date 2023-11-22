@@ -21,6 +21,8 @@ typedef struct {
     int day;
 } Date;
 
+
+
 void display_menu() {
     printf("-------------------------------\n");
     printf(" (로고)\n");
@@ -52,6 +54,35 @@ void display_food_list(Food *foods, int num_food) {
     printf("-------------------------------\n");
     printf("선택: \n");
 }
+void food_open()
+  {
+    FILE *fp;
+    char file_buff[100];
+    fp = fopen("data.txt", "a");
+
+    if (fp == NULL) printf("파일열기 실패\n");
+
+    int i;
+
+    for (i = 1; i <= 3; i++) {
+      printf("파일에 적을 내용을 입력하세요 (%d번째 라인)\n", i);
+      memset(file_buff, 0, sizeof(file_buff));
+      scanf("%s", file_buff);
+      if(i==3)
+      {
+      file_buff[strlen(file_buff)] = '\n';
+      fputs(file_buff, fp);
+
+        
+      fclose(fp);
+      }
+      file_buff[strlen(file_buff)] = '&';
+      fputs(file_buff, fp);
+
+    }
+      
+    
+  }
 
 void add_food(Food *foods, int *num_food) {
     int category;
@@ -80,17 +111,8 @@ void add_food(Food *foods, int *num_food) {
     printf("   ex)2023-10-01\n");
     printf("3. 별도 표기 사항\n");
     printf("-------------------------------\n");
-    printf("1. ");
-    scanf("%s", name);
-    printf("2. ");
-    scanf("%s", expiration_date);
-    printf("3. ");
-    scanf("%s", note);
-
-    foods[*num_food] = (Food){category, "", "", ""};
-    strcpy(foods[*num_food].name, name);
-    strcpy(foods[*num_food].expiration_date, expiration_date);
-    strcpy(foods[*num_food].note, note);
+    
+    food_open();
     (*num_food)++;
 }
 
@@ -125,6 +147,7 @@ int main() {
         switch (choice) {
             case 1:
                 display_food_list(foods, num_food);
+
                 break;
             case 2:
                 add_food(foods, &num_food);
