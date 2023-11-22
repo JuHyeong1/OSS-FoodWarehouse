@@ -21,6 +21,15 @@ typedef struct {
     int day;
 } Date;
 
+void display_option(){
+    printf("1. 사용자 이름\n");
+    printf("2. 냉장고 온도\n");
+    printf("3. 종료\n");
+    
+    option_open();
+    
+}
+
 
 
 void display_menu() {
@@ -83,6 +92,37 @@ void food_open()
       
     
   }
+
+  void option_open()
+  {
+    FILE *fp;
+    char file_buff[100];
+    fp = fopen("option.txt", "a");
+
+    if (fp == NULL) printf("파일열기 실패\n");
+
+    int i;
+
+    for (i = 1; i <= 2; i++) {
+      printf("파일에 적을 내용을 입력하세요 (%d번째 라인)\n", i);
+      memset(file_buff, 0, sizeof(file_buff));
+      scanf("%s", file_buff);
+      if(i==2)
+      {
+      file_buff[strlen(file_buff)] = '\n';
+      fputs(file_buff, fp);
+
+        
+      fclose(fp);
+      }
+      file_buff[strlen(file_buff)] = '&';
+      fputs(file_buff, fp);
+
+    }
+      
+    
+  }
+
 
 void add_food(Food *foods, int *num_food) {
     int category;
