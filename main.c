@@ -2,14 +2,18 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <Windows.h>
 #define max 50
 
-int print_food_list() {
-	struct Node {
-		char food[max], etc[max];
-		int dday;
-		struct Node* next;
-	}* first, * pre, * cur, * newrec;
+struct Node {
+	char food[max], etc[max], experiment[max];
+	int dday;
+	struct Node* next;
+}*first, * pre, * cur, * newrec;
+char food_list_str1[max] = "삭제 및 상세정보 확인은 번호 입력: ";
+char food_list_str2[max] = "삭제 - d, 상세정보 확인 - e";
+
+void sort_food_list() {
 	first = NULL;
 	pre = NULL;
 	newrec = NULL;
@@ -21,12 +25,12 @@ int print_food_list() {
 	char c;
 	char food[max];
 	int arr[max], i = 0, j = 0, flag = 1;
-	int t = 0;
 	while ((c = fgetc(fp1)) != EOF) {
 		food[i++] = c;
 		
 		if (c == '&' && flag == 2) {
 			food[--i] = '\0';
+			strcpy(newrec->experiment, food);
 			int result = 0;
 			j = 0;
 			for (int a = 0; food[a] != '\0'; a++) {
@@ -83,20 +87,13 @@ int print_food_list() {
 		}
 	}
 
-	cur = first;
-	int a = 1;
-	while (cur != NULL) {
-		if (cur->dday > 0) printf("%d. %s %d %s\n", a++, cur->food, cur->dday, cur->etc);
-		else printf("%d. %s !%d %s\n", a++, cur->food, cur->dday * -1, cur->etc);
-		cur = cur->next;
-	}
-	
-	return 0;
+	int a = display_food_list();
+	printf("%s", food_list_str1);
+
+	fclose(fp1);
 }
 
 int calculate_D_day(int y, int m, int d) {
-	y = y - 1900;
-
 	time_t cur;
 	cur = time(NULL);
 	struct tm* a;
@@ -108,13 +105,14 @@ int calculate_D_day(int y, int m, int d) {
 		else if (y / 100 == 0);
 		else flag = 0;
 	}
+	y = y - 1900;
 
 	for (int i = 1; i < m; i++) {
 		switch (i) {
 		case 1:d = d + 31; break;
 		case 2: {
 			d = d + 28;
-			if (flag == 0) d = d + 29;
+			if (flag == 0) d++;
 			break;
 		}
 		case 3:d = d + 31; break;
@@ -131,5 +129,58 @@ int calculate_D_day(int y, int m, int d) {
 	}
 	
 	d = d + (y - a->tm_year) * 365;
-	return d - a->tm_yday;
+	return d - a->tm_yday - 1;
+}
+
+int display_food_list() {
+	system("cls");
+	printf("-----------------------------------\n");
+	printf(" (로고)\n");
+	printf("음식창고\n");
+	printf("-----------------------------------\n");
+	cur = first;
+	int a = 1;
+	while (cur != NULL) {
+		if (cur->dday > 0) printf("%d. %s(%d)\n", a++, cur->food, cur->dday);
+		else printf("%d. %s(!%d)\n", a++, cur->food, cur->dday * -1);
+		cur = cur->next;
+	}
+	printf("-----------------------------------\n");
+
+	return a;
+}
+
+void delete(int num) {
+	FILE* fp;
+	cur = first;
+	for (int a = 1; a < num; a++) {
+		pre = cur;
+		cur = cur->next;
+	}
+	if (cur == first) first = cur->next;
+	else pre->next = cur->next;
+
+	fp = fopen("data.txt", "w");
+	cur = first;
+	while (cur != NULL) {
+		fprintf(fp, "%s&%s&%s\n", cur->food, cur->experiment, cur->etc);
+		cur = cur->next;
+	}
+}
+
+void print_etc(int num) {
+	cur = first;
+	for (int a = 1; a < num; a++) {
+		cur = cur->next;
+	}
+	printf("%s\n", cur->etc);
+}
+
+void free_malloc() {
+	cur = first;
+	while (cur != NULL) {
+		pre = cur;
+		cur = cur->next;
+		free(pre);
+	}
 }
