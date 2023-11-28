@@ -178,6 +178,7 @@ void EditConsole(int x, int y, char str) {
 }
 
 //텍스트를 출력하는 함수
+//x좌표, y좌표, x길이, y길이, 문자열
 void DrawTXT(int x, int y, int size_x, int size_y, char spr[]) {
     for (int i = 0; i < size_y; i++) {
         for (int j = 0; j < size_x; j++) {
@@ -185,10 +186,11 @@ void DrawTXT(int x, int y, int size_x, int size_y, char spr[]) {
         }
     }
 }
-
+//음식창고 로고를 consoleData에 출력
 void logo() {
     DrawTXT(1, 1, 6, 2, "음  식창  고");
 }
+//선택 입력칸 >> 을 consoleData에 출력
 void selectMenu() {
     DrawTXT(1, 39, 3, 1, ">> ");
 }
@@ -204,7 +206,9 @@ void startMenu() {//메인 메뉴
 
     logo();
     selectMenu();
+    //DrawTXT() 함수는 consoleData 배열에만 출력해서 따로 출력해줘야함
     printf("%s", consoleData);
+    //>> 앞으로 커서를 옮기기 위해서 gotoxy()함수 사용
     gotoxy(3, 38);
 
     char num; scanf("%c", &num);
@@ -225,7 +229,7 @@ void startMenu() {//메인 메뉴
     Sleep(50);
 }
 
-void foodDisplay(Food* foods, int num_food) {
+void foodDisplay(Food* foods, int num_food) {//테스트중
     FillConsole(consoleData, ' ', Max_value);
     char str_days[37];
     char str_num[20];
@@ -276,7 +280,7 @@ int main(void) {
 
     while (pageStatus != 9) {
         while (pageStatus == 0) {
-            system("cls");
+            system("cls");//콘솔창 초기화 함수
             startMenu();
             printf("%s", consoleData);
         }
