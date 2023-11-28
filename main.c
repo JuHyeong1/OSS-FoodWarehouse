@@ -1,4 +1,5 @@
-#pragma warning(disable:4996)
+//비주얼 스튜디오 오류 차단
+//#pragma warning(disable:4996)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,26 +131,31 @@ int get_remaining_days(char* expiration_date) {
 }
 
 //#######################################################################
-void set_console() {//콘솔창 초기 설정 함수
+//코드 통합 및 ui제작을 위한 함수들
+
+//콘솔창 초기 설정 함수
+void set_console() {
     system("title FoodWarehouse"); //콘솔창 이름 설정
     system("mode con:cols=50 lines=40"); //콘솔창 크기 설정
 
     CONSOLE_CURSOR_INFO ConsoleCursor;
     ConsoleCursor.bVisible = 10; //콘솔창에서 커서의 크기
-    ConsoleCursor.dwSize = 1;   //커서의 가시성
+    ConsoleCursor.dwSize = 1;   //커서의 가시성 (true: 보임, false: 안보임)
 
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleCursorInfo(consoleHandle, &ConsoleCursor);
 }
 
-void textcolor(int color_number) {//텍스트 컬러 설정 함수
+//텍스트 컬러 설정 함수
+void textcolor(int color_number) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color_number);
     // 0: 검정 1: 파랑 2: 초록 3: 옥색 4: 빨강 5: 자주색
     // 6: 노랑 7: 하양 8: 회색 9: 연파랑 10: 연초록
     // 11: 연옥색 12: 연빨강 13: 연자주 14: 연노랑 15: 진한 회색
 }
 
-void gotoxy(int x, int y) {//커서의 위치이동
+//커서를 해당 좌표로 이동
+void gotoxy(int x, int y) {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD Cur;
     Cur.X = x;
@@ -157,19 +163,22 @@ void gotoxy(int x, int y) {//커서의 위치이동
     SetConsoleCursorPosition(consoleHandle, Cur);
 }
 
-void FillConsole(char str[], char str_s, int max_value) {//화면 초기화
+//consoleData에 들어있는 화면을 초기화할때 사용하는 함수
+void FillConsole(char str[], char str_s, int max_value) {
     for (int i = 0; i < max_value; i++) {
         str[i] = str_s;
     }
 }
 
-void EditConsole(int x, int y, char str) {//화면 데이터를 수정하는 함수
+//해당 좌표의 문자(문자열X)를 str로 편집하는 함수
+void EditConsole(int x, int y, char str) {
     if ((x > 0 && y > 0) && (x - 1 < Console_X_MAX - 1 && y - 1 < Console_Y_MAX - 1)) {
         consoleData[(y - 1) * Console_X_MAX + x - 1] = str;
     }
 }
 
-void DrawSprite(int x, int y, int size_x, int size_y, char spr[]) {//텍스트를 출력하는 함수
+//텍스트를 출력하는 함수
+void DrawTXT(int x, int y, int size_x, int size_y, char spr[]) {
     for (int i = 0; i < size_y; i++) {
         for (int j = 0; j < size_x; j++) {
             EditConsole(x + j, y + i, spr[i * size_x + j]);
@@ -178,20 +187,20 @@ void DrawSprite(int x, int y, int size_x, int size_y, char spr[]) {//텍스트�
 }
 
 void logo() {
-    DrawSprite(1, 1, 6, 2, "음  식창  고");
+    DrawTXT(1, 1, 6, 2, "음  식창  고");
 }
 void selectMenu() {
-    DrawSprite(1, 39, 3, 1, ">> ");
+    DrawTXT(1, 39, 3, 1, ">> ");
 }
 
 void startMenu() {//메인 메뉴
     FillConsole(consoleData, ' ', Max_value);
 
-    DrawSprite(16, 8, 11, 1, "1. 음식목록");
-    DrawSprite(16, 10, 11, 1, "2. 음식추가");
-    DrawSprite(16, 12, 7, 1, "3. 설정");
-    DrawSprite(16, 14, 3, 1, "4. ");
-    DrawSprite(16, 17, 7, 1, "0. 종료");
+    DrawTXT(16, 8, 11, 1, "1. 음식목록");
+    DrawTXT(16, 10, 11, 1, "2. 음식추가");
+    DrawTXT(16, 12, 7, 1, "3. 설정");
+    DrawTXT(16, 14, 3, 1, "4. ");
+    DrawTXT(16, 17, 7, 1, "0. 종료");
 
     logo();
     selectMenu();
@@ -226,21 +235,21 @@ void foodDisplay(Food* foods, int num_food) {
 
             if (remaining_days >= 0) {
                 sprintf(str_days, "%d. %s(%d일)", i + 1, foods[i].name, remaining_days);
-                DrawSprite(12, line, 37, 1, str_days);
+                DrawTXT(12, line, 37, 1, str_days);
             }
             else {
                 sprintf(str_days, "%d. %s(%d일)", i + 1, foods[i].name, remaining_days);
-                DrawSprite(12, line, 37, 1, str_days);
+                DrawTXT(12, line, 37, 1, str_days);
             }
         }
     }
     else {
-        DrawSprite(12, 8, 15, 1, "항목이 없습니다.");
+        DrawTXT(12, 8, 15, 1, "항목이 없습니다.");
     }
     sprintf(str_num, "음식 개수: %d", num_food);
-    DrawSprite(12, 7, strlen(str_num), 1, str_num);
+    DrawTXT(12, 7, strlen(str_num), 1, str_num);
 
-    DrawSprite(1, 38, 11, 1, "(0)돌아가기");
+    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
     logo();
     selectMenu();
 
