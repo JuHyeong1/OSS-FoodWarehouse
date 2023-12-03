@@ -1,19 +1,79 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <conio.h>
 #include <string.h>
-#include <Windows.h>
-#define max 50
+#define MAX 50
 
 struct Node {
-	char food[max], etc[max], experiment[max];
+	char food[MAX], etc[MAX], experiment[MAX];
 	int dday;
 	struct Node* next;
 }*first, * pre, * cur, * newrec;
-char food_list_str1[max] = "삭제 및 상세정보 확인은 번호 입력: ";
-char food_list_str2[max] = "삭제 - d, 상세정보 확인 - e";
+char food_list_str1[MAX] = "삭제 및 상세정보 확인은 번호 입력";
+char food_list_str2[MAX] = "삭제 - d, 상세정보 확인 - e";
 
-void sort_food_list() {
+int sort_food_list();
+int calculate_D_day(int y, int m, int d);
+void display_food_list(int str_change, int n, int max);
+int delete(int num);
+void print_etc(int num);
+void free_malloc();
+void SetConsole();
+void gotoxy(int x, int y);
+
+int main() {
+	SetConsole();
+	int x = 2, y = 20, min = 1;
+	int max = sort_food_list();
+	int str = 1;
+	display_food_list(str, min, max);
+	printf(">>");
+
+	int n;
+	char c;
+
+	while (1) {
+		display_food_list(str, min, max);
+		gotoxy(x, y);
+
+		if (GetAsyncKeyState(VK_UP) & 0x8000) {
+			if (min > 1 && min <= max - 8) min--;
+		}
+		if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+			if (min >= 1 && min < max - 8) min++;
+		}
+		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
+			scanf("%d", &n);
+
+			if (n == 0) break;
+
+			else if (n >= 1 && n <= max) {
+				str = 2;
+				display_food_list(str, min, max);
+				scanf("%c", &c);
+
+				if (c == 'd') {
+					max = delete(n);
+					str = 1;
+				}
+
+				else if (c == 'e') {
+					print_etc(n);
+					str = 1;
+				}
+
+				else;
+			}
+
+			else;
+		}
+		Sleep(100);
+	}
+}
+
+int sort_food_list() {
 	first = NULL;
 	pre = NULL;
 	newrec = NULL;
@@ -23,8 +83,9 @@ void sort_food_list() {
 	if (fp1 == NULL) return -1;
 
 	char c;
-	char food[max];
-	int arr[max], i = 0, j = 0, flag = 1;
+	char food[MAX];
+	int arr[MAX], i = 0, j = 0, flag = 1;
+	int a = 0;
 	while ((c = fgetc(fp1)) != EOF) {
 		food[i++] = c;
 		
@@ -84,13 +145,13 @@ void sort_food_list() {
 			strcpy(newrec->etc, food);
 			i = 0;
 			flag = 1;
+			a++;
 		}
 	}
-
-	int a = display_food_list();
 	printf("%s", food_list_str1);
-
 	fclose(fp1);
+
+	return a;
 }
 
 int calculate_D_day(int y, int m, int d) {
@@ -132,48 +193,74 @@ int calculate_D_day(int y, int m, int d) {
 	return d - a->tm_yday - 1;
 }
 
-int display_food_list() {
+void display_food_list(int str_change, int n, int max) {
 	system("cls");
 	printf("-----------------------------------\n");
 	printf(" (로고)\n");
 	printf("음식창고\n");
 	printf("-----------------------------------\n");
 	cur = first;
-	int a = 1;
+	int a = 1, x = 6, y = 7;
+	if (max < 10) n = 1;
 	while (cur != NULL) {
-		if (cur->dday > 0) printf("%d. %s(%d)\n", a++, cur->food, cur->dday);
-		else printf("%d. %s(!%d)\n", a++, cur->food, cur->dday * -1);
+		if (a < n) {
+			a++;
+			cur = cur->next;
+			continue;
+		}
+		if (a > n + 8) break;
+
+		gotoxy(x, y);
+		if (cur->dday > 0) printf("%d. %s(%d)\n", a, cur->food, cur->dday);
+		else printf("%d. %s(!%d)\n", a, cur->food, cur->dday * -1);
+		cur = cur->next;
+		y++;
+		a++;
+	}
+	x = 6;
+	y = 17;
+	gotoxy(x, y);
+	if (str_change == 1) printf("0. 종료\n%s\n", food_list_str1);
+	if (str_change == 2) printf("0.종료\n%s\n", food_list_str2);
+	printf("-----------------------------------\n");
+	printf(">>");
+}
+
+int delete(int n) {
+	FILE* fp;
+	cur = first;
+	for (int a = 1; a < n; a++) {
+		pre = cur;
 		cur = cur->next;
 	}
-	printf("-----------------------------------\n");
+	if (cur == first) {
+		pre = first;
+		first = cur->next;
+		free(pre);
+	}
+	else {
+		pre->next = cur->next;
+		free(cur);
+	}
+
+	fp = fopen("data.txt", "w");
+	cur = first;
+	int a = 0;
+	while (cur != NULL) {
+		fprintf(fp, "%s&%s&%s\n", cur->food, cur->experiment, cur->etc);
+		cur = cur->next;
+		a++;
+	}
 
 	return a;
 }
 
-void delete(int num) {
-	FILE* fp;
+void print_etc(int n) {
 	cur = first;
-	for (int a = 1; a < num; a++) {
-		pre = cur;
+	for (int a = 1; a < n; a++) {
 		cur = cur->next;
 	}
-	if (cur == first) first = cur->next;
-	else pre->next = cur->next;
-
-	fp = fopen("data.txt", "w");
-	cur = first;
-	while (cur != NULL) {
-		fprintf(fp, "%s&%s&%s\n", cur->food, cur->experiment, cur->etc);
-		cur = cur->next;
-	}
-}
-
-void print_etc(int num) {
-	cur = first;
-	for (int a = 1; a < num; a++) {
-		cur = cur->next;
-	}
-	printf("%s\n", cur->etc);
+	printf("%s\n>>", cur->etc);
 }
 
 void free_malloc() {
@@ -183,4 +270,23 @@ void free_malloc() {
 		cur = cur->next;
 		free(pre);
 	}
+}
+
+void SetConsole() {
+	system("title AAA");
+	system("mode con:cols=100 lines=25");
+
+	CONSOLE_CURSOR_INFO ConsoleCursor;
+	ConsoleCursor.bVisible = 1;
+	ConsoleCursor.dwSize = 1;
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorInfo(consoleHandle, &ConsoleCursor);
+}
+
+void gotoxy(int x, int y) {
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD Cur;
+	Cur.X = x;
+	Cur.Y = y;
+	SetConsoleCursorPosition(consoleHandle, Cur);
 }
