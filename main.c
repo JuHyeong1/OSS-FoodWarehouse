@@ -1,5 +1,5 @@
 //비주얼 스튜디오 오류 차단
-//#pragma warning(disable:4996)
+#pragma warning(disable:4996)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +49,10 @@ void display_menu() {
     printf("-------------------------------\n");
     printf("선택: ");
 }
+
+
+
+int get_remaining_days(char*expiration_date);
 
 void display_food_list(Food* foods, int num_food) {
     printf("-------------------------------\n");
