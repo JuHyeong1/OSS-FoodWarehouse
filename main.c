@@ -37,6 +37,8 @@ typedef struct {
     int day;
 } Date;
 
+
+
 void display_menu() {
     printf("-------------------------------\n");
     printf(" (로고)\n");
@@ -51,8 +53,7 @@ void display_menu() {
 }
 
 
-
-int get_remaining_days(char*expiration_date);
+int get_remaining_days(char* expiration_date);
 
 void display_food_list(Food* foods, int num_food) {
     printf("-------------------------------\n");
@@ -108,12 +109,14 @@ void add_food(Food* foods, int* num_food) {
     printf("3. ");
     scanf("%s", note);
 
-    foods[*num_food] = (Food){ category, "", "", "" };
+    foods[*num_food] = (Food){ category, "", "", "" }; // 오류발생 위치 수정 필요
     strcpy(foods[*num_food].name, name);
     strcpy(foods[*num_food].expiration_date, expiration_date);
     strcpy(foods[*num_food].note, note);
     (*num_food)++;
 }
+
+
 
 int get_remaining_days(char* expiration_date) {
     time_t t = time(NULL);
@@ -194,12 +197,12 @@ void DrawTXT(int x, int y, int size_x, int size_y, char spr[]) {
 void logo() {
     DrawTXT(1, 1, 6, 2, "음  식창  고");
 }
-//선택 입력칸 >> 을 consoleData에 출력
+//선택 입력칸 '>>' 을 consoleData에 출력
 void selectMenu() {
     DrawTXT(1, 39, 3, 1, ">> ");
 }
 
-void startMenu() {//메인 메뉴
+void startMenu() {//메인메뉴 출력함수
     FillConsole(consoleData, ' ', Max_value);
 
     DrawTXT(16, 8, 11, 1, "1. 음식목록");
@@ -233,7 +236,7 @@ void startMenu() {//메인 메뉴
     Sleep(50);
 }
 
-void foodDisplay(Food* foods, int num_food) {//테스트중
+void foodDisplay(Food* foods, int num_food) { //음식목록 화면 출력 함수 // 테스트 중
     FillConsole(consoleData, ' ', Max_value);
     char str_days[37];
     char str_num[20];
@@ -264,10 +267,92 @@ void foodDisplay(Food* foods, int num_food) {//테스트중
     printf("%s", consoleData);
     gotoxy(3, 38);
 
-    char num; scanf("%c", &num);
-    if (num == '0') {
+    int num; scanf("%d", &num);
+    if (num == 0) {
         pageStatus = 0;
     }
+}
+
+void foodAdd(Food* foods, int* num_food) {//음식추가 화면 출력 함수 // 미완성
+    FillConsole(consoleData, ' ', Max_value);
+    
+    DrawTXT(16, 8, 7, 1, "1. 육류");
+    DrawTXT(16, 10, 9, 1, "2. 유제품");
+    DrawTXT(16, 12, 7, 1, "3. 김치");
+    DrawTXT(16, 14, 7, 1, "4. 음료");
+    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+    
+    logo();
+    selectMenu();
+    printf("%s", consoleData);
+    gotoxy(3, 38);
+
+    char name[MAX_NAME_LENGTH];
+    char expiration_date[MAX_DATE_LENGTH];
+    char note[MAX_NOTE_LENGTH];
+
+    int category; scanf("%d", &category);
+    if (category == 0) {
+        pageStatus = 0;
+    }
+    else if (category == 1 || category == 2 || category == 3 || category == 4) {
+        FillConsole(consoleData, ' ', Max_value);
+
+        DrawTXT(16, 8, 12, 1, "1. 음식 이름");
+        DrawTXT(16, 10, 12, 1, "2. 소비 기한");
+        DrawTXT(16, 12, 12, 1, "3. 추가 정보");
+        logo();
+        selectMenu();
+
+
+        DrawTXT(1, 38, 15, 1, "1. 음식 이름");
+        system("cls");
+        printf("%s", consoleData);
+        gotoxy(3, 38);
+        scanf("%s", name);
+
+
+        system("cls");
+        DrawTXT(1, 38, 28, 1, "2. 소비 기한 (ex.2020-12-12)");
+        system("cls");
+        printf("%s", consoleData);
+        gotoxy(3, 38);
+        scanf("%s", expiration_date);
+
+
+        system("cls");
+        DrawTXT(1, 38, 15, 1, "3. 추가 정보");
+        system("cls");
+        printf("%s", consoleData);
+        gotoxy(3, 38);
+        scanf("%s", note);
+
+        foods[*num_food] = (Food){ category, "", "", "" };  //에러 발생 위치 수정 요먕
+        strcpy(foods[*num_food].name, name);
+        strcpy(foods[*num_food].expiration_date, expiration_date);
+        strcpy(foods[*num_food].note, note);
+        (*num_food)++;
+    }
+}
+
+void displaySetting() {//설정 화면 출력 함수
+    FillConsole(consoleData, ' ', Max_value);
+
+    DrawTXT(16, 8, 9, 1, "1. 사용자");
+    DrawTXT(16, 10, 7, 1, "2. 온도");
+    DrawTXT(16, 12, 12, 1, "3. 김치 종류");
+    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+
+    logo();
+    selectMenu();
+    printf("%s", consoleData);
+    gotoxy(3, 38);
+
+    int category; scanf("%d", &category);
+    if (category == 0) {
+        pageStatus = 0;
+    }
+
 }
 
 //#######################################################################
@@ -282,22 +367,23 @@ int main(void) {
     set_console();
     pageStatus = 0;
 
-    while (pageStatus != 9) {
-        while (pageStatus == 0) {
-            system("cls");//콘솔창 초기화 함수
+    while (1) {
+        while (pageStatus == 0) {//메인 메뉴
+            //콘솔창 초기화 함수
+            system("cls");
             startMenu();
-            printf("%s", consoleData);
         }
-        while (pageStatus == 1) {
+        while (pageStatus == 1) {//음식 목록
             system("cls");
             foodDisplay(foods, num_food);
         }
-        while (pageStatus == 2) {
+        while (pageStatus == 2) {//음식 추가
             system("cls");
-            Sleep(50);
+            foodAdd(foods, num_food);
         }
-        while (pageStatus == 3) {
-
+        while (pageStatus == 3) {//설정
+            system("cls");
+            displaySetting();
         }
     }
     return(0);
