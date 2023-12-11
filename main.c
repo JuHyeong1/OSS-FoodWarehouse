@@ -39,85 +39,6 @@ typedef struct {
 
 
 
-void display_menu() {
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 음식 목록\n");
-    printf("2. 음식 추가\n");
-    printf("3. 설정\n");
-    printf("4. 종료\n");
-    printf("-------------------------------\n");
-    printf("선택: ");
-}
-
-
-int get_remaining_days(char* expiration_date);
-
-void display_food_list(Food* foods, int num_food) {
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-
-    for (int i = 0; i < num_food; i++) {
-        int remaining_days = get_remaining_days(foods[i].expiration_date);
-        if (remaining_days >= 0) {
-            printf("%d. %s(%d일)\n", i + 1, foods[i].name, remaining_days);
-        }
-        else {
-            printf("%d. %s(!%d일)\n", i + 1, foods[i].name, -remaining_days);
-        }
-    }
-
-    printf("-------------------------------\n");
-    printf("선택: \n");
-}
-
-void add_food(Food* foods, int* num_food) {
-    int category;
-    char name[MAX_NAME_LENGTH];
-    char expiration_date[MAX_DATE_LENGTH];
-    char note[MAX_NOTE_LENGTH];
-
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 육류\n");
-    printf("2. 유제품\n");
-    printf("3. 김치\n");
-    printf("4. 음료\n");
-    printf("-------------------------------\n");
-    printf("선택: ");
-    scanf("%d", &category);
-
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 제품명\n");
-    printf("2. 유통기한을 입력하시오.\n");
-    printf("   ex)2023-10-01\n");
-    printf("3. 별도 표기 사항\n");
-    printf("-------------------------------\n");
-    printf("1. ");
-    scanf("%s", name);
-    printf("2. ");
-    scanf("%s", expiration_date);
-    printf("3. ");
-    scanf("%s", note);
-
-    foods[*num_food] = (Food){ category, "", "", "" }; // 오류발생 위치 수정 필요
-    strcpy(foods[*num_food].name, name);
-    strcpy(foods[*num_food].expiration_date, expiration_date);
-    strcpy(foods[*num_food].note, note);
-    (*num_food)++;
-}
-
-
-
 int get_remaining_days(char* expiration_date) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -273,29 +194,30 @@ void foodDisplay(Food* foods, int num_food) { //음식목록 화면 출력 함�
     }
 }
 
-void foodAdd(Food* foods, int* num_food) {//음식추가 화면 출력 함수 // 미완성
+void foodAdd(Food* foods, int *num_food) {
     FillConsole(consoleData, ' ', Max_value);
-    
+
     DrawTXT(16, 8, 7, 1, "1. 육류");
     DrawTXT(16, 10, 9, 1, "2. 유제품");
     DrawTXT(16, 12, 7, 1, "3. 김치");
     DrawTXT(16, 14, 7, 1, "4. 음료");
     DrawTXT(1, 38, 11, 1, "(0)돌아가기");
-    
+
     logo();
     selectMenu();
     printf("%s", consoleData);
-    gotoxy(3, 38);
+    gotoxy(3, 40);
 
     char name[MAX_NAME_LENGTH];
     char expiration_date[MAX_DATE_LENGTH];
     char note[MAX_NOTE_LENGTH];
+        Food newFood;
 
     int category; scanf("%d", &category);
     if (category == 0) {
         pageStatus = 0;
     }
-    else if (category == 1 || category == 2 || category == 3 || category == 4) {
+    else if (category == 1 || category == 2 || category == 4) {
         FillConsole(consoleData, ' ', Max_value);
 
         DrawTXT(16, 8, 12, 1, "1. 음식 이름");
@@ -308,49 +230,81 @@ void foodAdd(Food* foods, int* num_food) {//음식추가 화면 출력 함수 //
         DrawTXT(1, 38, 15, 1, "1. 음식 이름");
         system("cls");
         printf("%s", consoleData);
-        gotoxy(3, 38);
-        scanf("%s", name);
+        gotoxy(3, 40);
+        scanf_s("%s", name,255);
 
 
         system("cls");
         DrawTXT(1, 38, 28, 1, "2. 소비 기한 (ex.2020-12-12)");
         system("cls");
         printf("%s", consoleData);
-        gotoxy(3, 38);
-        scanf("%s", expiration_date);
+        gotoxy(3, 40);
+        scanf_s("%s", expiration_date,255);
 
 
         system("cls");
         DrawTXT(1, 38, 15, 1, "3. 추가 정보");
         system("cls");
         printf("%s", consoleData);
-        gotoxy(3, 38);
-        scanf("%s", note);
+        gotoxy(3, 40);
+        scanf_s("%s", note,255);
 
-        foods[*num_food] = (Food){ category, "", "", "" };  //에러 발생 위치 수정 요먕
-        strcpy(foods[*num_food].name, name);
-        strcpy(foods[*num_food].expiration_date, expiration_date);
-        strcpy(foods[*num_food].note, note);
+        newFood.category = category;
+        strcpy(newFood.name, name);
+        strcpy(newFood.expiration_date, expiration_date);
+        strcpy(newFood.note, note);
+
+        foods[*num_food] = newFood;
         (*num_food)++;
     }
-}
 
-void displaySetting() {//설정 화면 출력 함수
-    FillConsole(consoleData, ' ', Max_value);
+    if (category == 3) {
+        FillConsole(consoleData, ' ', Max_value);
 
-    DrawTXT(16, 8, 9, 1, "1. 사용자");
-    DrawTXT(16, 10, 7, 1, "2. 온도");
-    DrawTXT(16, 12, 12, 1, "3. 김치 종류");
-    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+        DrawTXT(16, 8, 12, 1, "1. 김치 종류 (aa 배추김치, bb 깍두기, cc 파김치)");
+        DrawTXT(16, 10, 12, 1, "2. 제조 일자 (yyyy-mm-dd)");
+        DrawTXT(16, 12, 12, 1, "3. 특이 사항");
+        logo();
+        selectMenu();
 
-    logo();
-    selectMenu();
-    printf("%s", consoleData);
-    gotoxy(3, 38);
+        DrawTXT(1, 38, 28, 1, "1. 김치 종류 (a, b, c)");
+        system("cls");
+        printf("%s", consoleData);
+        gotoxy(3, 40);
 
-    int category; scanf("%d", &category);
-    if (category == 0) {
-        pageStatus = 0;
+        scanf_s(" %s", name,255);
+
+        DrawTXT(1, 38, 28, 1, "2. 제조 일자 (yyyy-mm-dd)");
+        printf("%s", consoleData);
+        gotoxy(3, 40);
+
+        char manufacture_date[MAX_DATE_LENGTH];
+        scanf_s("%s", manufacture_date,255);
+
+        DrawTXT(1, 38, 15, 1, "3. 특이 사항");
+        printf("%s", consoleData);
+        gotoxy(3, 40);
+
+        char note[MAX_NOTE_LENGTH];
+        scanf_s("%s", note,255);
+
+        int remaining_days = -1; //다른 부분 완성후 연결필요
+        if (name[*num_food] == 'a') {
+            remaining_days = 28;
+        }
+        else if (name[*num_food] == 'b') {
+            remaining_days = 10;
+        }
+        else if (name[*num_food] == 'c') {
+            remaining_days = 7;
+        }
+       
+        newFood.category = category;
+        strncpy(newFood.name, name,50);
+        strncpy(newFood.note, note,255);
+
+        foods[*num_food] = newFood;
+        (*num_food)++;
     }
 
 }
