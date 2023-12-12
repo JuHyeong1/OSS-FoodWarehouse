@@ -23,7 +23,6 @@ int num_food = 0;
 
 char consoleData[Max_value];
 
-
 typedef struct {
     int category;
     char name[MAX_NAME_LENGTH];
@@ -36,6 +35,90 @@ typedef struct {
     int month;
     int day;
 } Date;
+
+struct Node { // 삽입 정렬을 위한 연결리스트
+    int category;
+    char food[MAX_NAME_LENGTH], etc[MAX_NOTE_LENGTH], expiration[MAX_DATE_LENGTH];
+    int remaining_days;
+    struct Node* next;
+}*first, * pre, * cur, * newrec;
+
+void display_menu() {
+    printf("-------------------------------\n");
+    printf(" (로고)\n");
+    printf("음식창고\n");
+    printf("-------------------------------\n");
+    printf("1. 음식 목록\n");
+    printf("2. 음식 추가\n");
+    printf("3. 설정\n");
+    printf("4. 종료\n");
+    printf("-------------------------------\n");
+    printf("선택: ");
+}
+
+
+int get_remaining_days(char* expiration_date);
+
+void display_food_list(Food* foods, int num_food) {
+    printf("-------------------------------\n");
+    printf(" (로고)\n");
+    printf("음식창고\n");
+    printf("-------------------------------\n");
+
+    for (int i = 0; i < num_food; i++) {
+        int remaining_days = get_remaining_days(foods[i].expiration_date);
+        if (remaining_days >= 0) {
+            printf("%d. %s(%d일)\n", i + 1, foods[i].name, remaining_days);
+        }
+        else {
+            printf("%d. %s(!%d일)\n", i + 1, foods[i].name, -remaining_days);
+        }
+    }
+
+    printf("-------------------------------\n");
+    printf("선택: \n");
+}
+
+void add_food(Food* foods, int* num_food) {
+    int category;
+    char name[MAX_NAME_LENGTH];
+    char expiration_date[MAX_DATE_LENGTH];
+    char note[MAX_NOTE_LENGTH];
+
+    printf("-------------------------------\n");
+    printf(" (로고)\n");
+    printf("음식창고\n");
+    printf("-------------------------------\n");
+    printf("1. 육류\n");
+    printf("2. 유제품\n");
+    printf("3. 김치\n");
+    printf("4. 음료\n");
+    printf("-------------------------------\n");
+    printf("선택: ");
+    scanf("%d", &category);
+
+    printf("-------------------------------\n");
+    printf(" (로고)\n");
+    printf("음식창고\n");
+    printf("-------------------------------\n");
+    printf("1. 제품명\n");
+    printf("2. 유통기한을 입력하시오.\n");
+    printf("   ex)2023-10-01\n");
+    printf("3. 별도 표기 사항\n");
+    printf("-------------------------------\n");
+    printf("1. ");
+    scanf("%s", name);
+    printf("2. ");
+    scanf("%s", expiration_date);
+    printf("3. ");
+    scanf("%s", note);
+
+    foods[*num_food] = (Food){ category, "", "", "" }; // 오류발생 위치 수정 필요
+    strcpy(foods[*num_food].name, name);
+    strcpy(foods[*num_food].expiration_date, expiration_date);
+    strcpy(foods[*num_food].note, note);
+    (*num_food)++;
+}
 
 
 
@@ -56,6 +139,45 @@ int get_remaining_days(char* expiration_date) {
     int remaining_days = (int)(remaining_seconds / (60 * 60 * 24));
 
     return remaining_days;
+}
+
+int calculateDays(int y, int m, int d) {
+    time_t cur;
+    cur = time(NULL);
+    struct tm* a;
+    a = localtime(&cur);
+
+    int flag = 1;
+    if (y / 4 == 0) {
+        if (y / 400 == 0) flag = 0;
+        else if (y / 100 == 0);
+        else flag = 0;
+    }
+    y = y - 1900;
+
+    for (int i = 1; i < m; i++) {
+        switch (i) {
+        case 1:d = d + 31; break;
+        case 2: {
+            d = d + 28;
+            if (flag == 0) d++;
+            break;
+        }
+        case 3:d = d + 31; break;
+        case 4:d = d + 30; break;
+        case 5:d = d + 31; break;
+        case 6:d = d + 30; break;
+        case 7:d = d + 31; break;
+        case 8:d = d + 31; break;
+        case 9:d = d + 30; break;
+        case 10:d = d + 31; break;
+        case 11:d = d + 30; break;
+        default:break;
+        }
+    }
+
+    d = d + (y - a->tm_year) * 365;
+    return d - a->tm_yday - 1;
 }
 
 //#######################################################################
@@ -157,44 +279,169 @@ void startMenu() {//메인메뉴 출력함수
     Sleep(50);
 }
 
-void foodDisplay(Food* foods, int num_food) { //음식목록 화면 출력 함수 // 테스트 중
-    FillConsole(consoleData, ' ', Max_value);
-    char str_days[37];
-    char str_num[20];
-    if (num_food >= 1) {
-        for (int line = 8, i = 0; line < 35, i < 27; line++, i++) {
-            int remaining_days = get_remaining_days(foods[i].expiration_date);
+void sort_food_list() {
+    first = NULL;
+    pre = NULL;
+    newrec = NULL;
 
-            if (remaining_days >= 0) {
-                sprintf(str_days, "%d. %s(%d일)", i + 1, foods[i].name, remaining_days);
-                DrawTXT(12, line, 37, 1, str_days);
+    FILE* fp1;
+    fp1 = fopen("data.txt", "r");
+    if (fp1 == NULL) return -1;
+
+    char c;
+    char food[100];
+    int arr[100], i = 0, j = 0, flag = 1;
+    int a = 0;
+    while ((c = fgetc(fp1)) != EOF) {
+        food[i++] = c;
+
+        if (c == '&' && flag == 2) {
+            food[--i] = '\0';
+            strcpy(newrec->expiration, food);
+            int result = 0;
+            j = 0;
+            for (int a = 0; food[a] != '\0'; a++) {
+                if (food[a] == '-') {
+                    arr[j++] = result;
+                    result = 0;
+                    continue;
+                }
+                result = result * 10 + (food[a] - '0');
             }
+            arr[j] = result;
+
+            newrec->remaining_days = calculateDays(arr[0], arr[1], arr[2]);
+            if (first == NULL) first = newrec;
+
             else {
-                sprintf(str_days, "%d. %s(%d일)", i + 1, foods[i].name, remaining_days);
-                DrawTXT(12, line, 37, 1, str_days);
+                cur = first;
+                while (cur != NULL) {
+                    if (newrec->remaining_days > cur->remaining_days) {
+                        pre = cur;
+                        cur = cur->next;
+                    }
+
+                    else break;
+                }
+                if (cur == first) first = newrec;
+                else pre->next = newrec;
+
+                newrec->next = cur;
             }
+            i = 0;
+        }
+
+        if (c == '&' && flag == 1) {
+            food[--i] = '\0';
+            newrec = malloc(sizeof(struct Node));
+            i = 0;
+
+            if (newrec == NULL) {
+                return -1;
+            }
+
+            strcpy(newrec->food, food);
+            newrec->next = NULL;
+
+            flag = 2;
+        }
+
+        if (c == '\n') {
+            food[--i] = '\0';
+            strcpy(newrec->etc, food);
+            i = 0;
+            flag = 1;
+            a++;
         }
     }
-    else {
-        DrawTXT(12, 8, 15, 1, "항목이 없습니다.");
-    }
-    sprintf(str_num, "음식 개수: %d", num_food);
-    DrawTXT(12, 7, strlen(str_num), 1, str_num);
+    fclose(fp1);
 
-    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
-    logo();
-    selectMenu();
-
-    printf("%s", consoleData);
-    gotoxy(3, 38);
-
-    int num; scanf("%d", &num);
-    if (num == 0) {
-        pageStatus = 0;
-    }
+    num_food = a;
 }
 
-void foodAdd(Food* foods, int *num_food) {
+void foodDisplay(int str, int n) {  // 음식목록 화면 출력 함수
+    system("cls");                  // DrawTXT로 받아 consoleData에 쓰는 방법은 작동하지 않아서
+    cur = first;                    // 쓰지 못했습니다..
+    int a = 1, x = 11, y = 7;
+    if (num_food != 0) {
+        if (num_food < 11) n = 1;
+        while (cur != NULL) {
+            if (a < n) {
+                a++;
+                cur = cur->next;
+                continue;
+            }
+            if (a > n + 9) break;
+
+            gotoxy(x, y);
+            if (cur->remaining_days > 0) printf("%d. %s(%d)\n", a, cur->food, cur->remaining_days);
+            else printf("%d. %s(!%d)\n", a, cur->food, cur->remaining_days * -1);
+            cur = cur->next;
+            a++;
+            y++;
+        }
+        gotoxy(0, 35);
+        if (str == 1) printf("삭제 및 상세정보 확인은 번호 입력");
+        if (str == 2) printf("삭제 - d, 상세정보 확인 - e");
+    }
+
+    else {
+        gotoxy(11, 7);
+        printf("항목이 없습니다.");
+    }
+
+    gotoxy(11, 6);
+    printf("음식 개수: %d", num_food);
+
+    gotoxy(0, 0);
+    printf("음  식\n창  고");
+    gotoxy(0, 37);
+    printf("(0)돌아가기\n>>");
+
+    gotoxy(3, 38);
+}
+
+int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - 문자 순)
+    int n;
+    int str = 1;
+    char c;
+    while (1) {
+        scanf("%d", &n);
+        getchar();
+        if (n == 0) {
+            return -1;
+        }
+
+        else if (n >= 1 && n <= num_food) {
+            while (1) {
+                str = 2;
+                foodDisplay(str, min);
+                printf(" ");
+                scanf("%c", &c);
+                getchar();
+
+                if (c == 'd') {
+                    if (n == num_food && min <= num_food - 9) min--;
+                    break;
+                }
+
+                else if (c == 'e') {
+                    break;
+                }
+
+                else;
+            }
+            break;
+        }
+
+        else break;
+    }
+
+
+    return min;
+}
+
+void foodAdd(Food* foods, int* num_food) {
     FillConsole(consoleData, ' ', Max_value);
 
     DrawTXT(16, 8, 7, 1, "1. 육류");
@@ -211,7 +458,7 @@ void foodAdd(Food* foods, int *num_food) {
     char name[MAX_NAME_LENGTH];
     char expiration_date[MAX_DATE_LENGTH];
     char note[MAX_NOTE_LENGTH];
-        Food newFood;
+    Food newFood;
 
     int category; scanf("%d", &category);
     if (category == 0) {
@@ -231,7 +478,7 @@ void foodAdd(Food* foods, int *num_food) {
         system("cls");
         printf("%s", consoleData);
         gotoxy(3, 40);
-        scanf_s("%s", name,255);
+        scanf_s("%s", name, 255);
 
 
         system("cls");
@@ -239,7 +486,7 @@ void foodAdd(Food* foods, int *num_food) {
         system("cls");
         printf("%s", consoleData);
         gotoxy(3, 40);
-        scanf_s("%s", expiration_date,255);
+        scanf_s("%s", expiration_date, 255);
 
 
         system("cls");
@@ -247,7 +494,7 @@ void foodAdd(Food* foods, int *num_food) {
         system("cls");
         printf("%s", consoleData);
         gotoxy(3, 40);
-        scanf_s("%s", note,255);
+        scanf_s("%s", note, 255);
 
         newFood.category = category;
         strcpy(newFood.name, name);
@@ -272,21 +519,21 @@ void foodAdd(Food* foods, int *num_food) {
         printf("%s", consoleData);
         gotoxy(3, 40);
 
-        scanf_s(" %s", name,255);
+        scanf_s(" %s", name, 255);
 
         DrawTXT(1, 38, 28, 1, "2. 제조 일자 (yyyy-mm-dd)");
         printf("%s", consoleData);
         gotoxy(3, 40);
 
         char manufacture_date[MAX_DATE_LENGTH];
-        scanf_s("%s", manufacture_date,255);
+        scanf_s("%s", manufacture_date, 255);
 
         DrawTXT(1, 38, 15, 1, "3. 특이 사항");
         printf("%s", consoleData);
         gotoxy(3, 40);
 
         char note[MAX_NOTE_LENGTH];
-        scanf_s("%s", note,255);
+        scanf_s("%s", note, 255);
 
         int remaining_days = -1; //다른 부분 완성후 연결필요
         if (name[*num_food] == 'a') {
@@ -298,13 +545,33 @@ void foodAdd(Food* foods, int *num_food) {
         else if (name[*num_food] == 'c') {
             remaining_days = 7;
         }
-       
+
         newFood.category = category;
-        strncpy(newFood.name, name,50);
-        strncpy(newFood.note, note,255);
+        strncpy(newFood.name, name, 50);
+        strncpy(newFood.note, note, 255);
 
         foods[*num_food] = newFood;
         (*num_food)++;
+    }
+
+}
+
+void displaySetting() {//설정 화면 출력 함수
+    FillConsole(consoleData, ' ', Max_value);
+
+    DrawTXT(16, 8, 9, 1, "1. 사용자");
+    DrawTXT(16, 10, 7, 1, "2. 온도");
+    DrawTXT(16, 12, 12, 1, "3. 김치 종류");
+    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+
+    logo();
+    selectMenu();
+    printf("%s", consoleData);
+    gotoxy(3, 38);
+
+    int category; scanf("%d", &category);
+    if (category == 0) {
+        pageStatus = 0;
     }
 
 }
@@ -329,7 +596,25 @@ int main(void) {
         }
         while (pageStatus == 1) {//음식 목록
             system("cls");
-            foodDisplay(foods, num_food);
+            sort_food_list();
+            int min = 1;
+            int str = 1;
+            foodDisplay(str, min);
+            while (min != -1) { 
+                foodDisplay(str, min);
+
+                if (GetAsyncKeyState(VK_UP) & 0x8000) {// 위, 아래 방향키로 스크롤 조작
+                    if (min > 1 && min <= num_food - 9) min--;
+                }
+                if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                    if (min >= 1 && min < num_food - 9) min++;
+                }
+                if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
+                    min = input(min);
+                }
+                Sleep(100);
+            }
+            if (min == -1) pageStatus = 0;
         }
         while (pageStatus == 2) {//음식 추가
             system("cls");
