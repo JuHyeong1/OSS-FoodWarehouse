@@ -1,5 +1,8 @@
 //비주얼 스튜디오 오류 차단
-#pragma warning(disable:4996)
+//#pragma warning(disable:4996)
+
+//#################################################################################
+//헤더 선언
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,21 +12,30 @@
 #include <conio.h>
 #include <stdbool.h>
 
+//#################################################################################
+
+
+//#################################################################################
+//전역 변수 선언
 
 #define MAX_NAME_LENGTH 50
 #define MAX_DATE_LENGTH 20
 #define MAX_NOTE_LENGTH 100
 #define MAX_FOODS 100
-#define Console_X_MAX 50
+#define Console_X_MAX 52
 #define Console_Y_MAX 40
 #define Max_value Console_X_MAX * Console_Y_MAX
 
-int pageStatus = 0;//현재 화면 상태 1: 메인화면 2: 음식목록 3: 음식추가 9:종료
+int pageStatus;//현재 화면 상태 1: 메인화면 2: 음식목록 3: 음식추가 9:종료
 int num_food = 0;
 int etc = 0;
 char etc_str[MAX_NOTE_LENGTH];
 
-char consoleData[Max_value];
+//#################################################################################
+
+
+//#################################################################################
+//구조체 선언
 
 typedef struct {
     int category;
@@ -45,86 +57,149 @@ struct Node { // 삽입 정렬을 위한 연결리스트
     struct Node* next;
 }*first, * pre, * cur, * newrec;
 
-void display_menu() {
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 음식 목록\n");
-    printf("2. 음식 추가\n");
-    printf("3. 설정\n");
-    printf("4. 종료\n");
-    printf("-------------------------------\n");
-    printf("선택: ");
-}
+//#################################################################################
 
 
-int get_remaining_days(char* expiration_date);
+//#################################################################################
+//함수 원형
 
-void display_food_list(Food* foods, int num_food) {
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
+void UI();
 
-    for (int i = 0; i < num_food; i++) {
-        int remaining_days = get_remaining_days(foods[i].expiration_date);
-        if (remaining_days >= 0) {
-            printf("%d. %s(%d일)\n", i + 1, foods[i].name, remaining_days);
-        }
-        else {
-            printf("%d. %s(!%d일)\n", i + 1, foods[i].name, -remaining_days);
+int getRemainingDays(char* expiration_date);
+int calculateDays(int y, int m, int d);
+
+void settingConsole();
+void settingTextColor(int color_number);
+void gotoxy(int x, int y);
+
+void displayMainMenu();
+
+void displayFoodList(int str, int n);
+void sortingFoodList();
+int input(int min);
+
+void addFood(Food* foods, int* num_food);
+
+void displaySetting();
+
+//#################################################################################
+
+
+void main() {
+    //Food foods[MAX_FOODS];
+    Food* foods = NULL;
+    foods = (Food*)malloc(sizeof(Food) * MAX_FOODS);
+
+    int num_food = 0;
+
+    srand(time(NULL));
+    settingConsole();
+
+    pageStatus = 0;
+    while (1) {
+        //pageStatus = 0;
+        switch (pageStatus) {
+            case 0://메인메뉴
+            {//switch 문 안의 case 내에서 변수 선언을 위해서는 중괄호가 필요하다.
+                int num;
+                system("cls");
+                displayMainMenu();
+                gotoxy(5, 36);
+                scanf("%d", &num);
+                switch (num) {
+                case 0:
+                    pageStatus = 9;
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    pageStatus = num;
+                    break;
+                default:
+                    printf("잘못된 값이 입력되었습니다.");
+                }
+                Sleep(50);
+                break;
+            }
+            case 1://음식목록
+            {
+
+                int min = 1;
+                int str = 1;
+
+                system("cls");
+                sortingFoodList();
+                displayFoodList(str, min);
+
+                while (min != -1) {
+                    system("cls");
+                    displayFoodList(str, min);
+
+                    if (GetAsyncKeyState(VK_UP) & 0x8000) {// 위, 아래 방향키로 스크롤 조작
+                        if (min > 1 && min <= num_food - 9)
+                            min--;
+                    }
+                    if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                        if (min >= 1 && min < num_food - 9)
+                            min++;
+                    }
+                    if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
+                        etc = 0;
+                        min = input(min);
+                    }
+                    Sleep(100);
+                }
+                if (min == -1)
+                    pageStatus = 0;
+            }
+                break;
+            case 2://음식추가
+                system("cls");
+                addFood(foods, &num_food);
+                break;
+            case 3://설정
+                system("cls");
+                displaySetting();
+                break;
+            case 9://종료
+                system("cls");
+                gotoxy(1,1);
+                printf("프로그램을 종료합니다.");
+                free(foods);
+                Sleep(10000);
+                exit(0);
+                break;
+            default:
+                system("cls");
+                UI();
+                gotoxy(26, 20);
+                printf("잘못된 입력입니다.");
+                Sleep(10000);
         }
     }
-
-    printf("-------------------------------\n");
-    printf("선택: \n");
-}
-
-void add_food(Food* foods, int* num_food) {
-    int category;
-    char name[MAX_NAME_LENGTH];
-    char expiration_date[MAX_DATE_LENGTH];
-    char note[MAX_NOTE_LENGTH];
-
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 육류\n");
-    printf("2. 유제품\n");
-    printf("3. 김치\n");
-    printf("4. 음료\n");
-    printf("-------------------------------\n");
-    printf("선택: ");
-    scanf("%d", &category);
-
-    printf("-------------------------------\n");
-    printf(" (로고)\n");
-    printf("음식창고\n");
-    printf("-------------------------------\n");
-    printf("1. 제품명\n");
-    printf("2. 유통기한을 입력하시오.\n");
-    printf("   ex)2023-10-01\n");
-    printf("3. 별도 표기 사항\n");
-    printf("-------------------------------\n");
-    printf("1. ");
-    scanf("%s", name);
-    printf("2. ");
-    scanf("%s", expiration_date);
-    printf("3. ");
-    scanf("%s", note);
-
-    foods[*num_food] = (Food){ category, "", "", "" }; // 오류발생 위치 수정 필요
-    strcpy(foods[*num_food].name, name);
-    strcpy(foods[*num_food].expiration_date, expiration_date);
-    strcpy(foods[*num_food].note, note);
-    (*num_food)++;
+    free(foods);
+    exit(0);
 }
 
 
+//#################################################################################
+//함수 정의
 
-int get_remaining_days(char* expiration_date) {
+//UI
+void UI() {
+    puts("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
+    for (int i = 0; i < 36; i++)
+        puts("■                                                ■");
+    puts("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
+
+    gotoxy(3, 3); printf("음  식");
+    gotoxy(3, 4); printf("창  고");
+
+    gotoxy(2, 36); printf(">> ");
+}
+
+//유통기한 계산
+int getRemainingDays(char* expiration_date) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
@@ -142,7 +217,6 @@ int get_remaining_days(char* expiration_date) {
 
     return remaining_days;
 }
-
 int calculateDays(int y, int m, int d) {
     time_t cur;
     cur = time(NULL);
@@ -182,13 +256,10 @@ int calculateDays(int y, int m, int d) {
     return d - a->tm_yday - 1;
 }
 
-//#######################################################################
-//코드 통합 및 ui제작을 위한 함수들
-
-//콘솔창 초기 설정 함수
-void set_console() {
+//콘솔
+void settingConsole() {//콘솔창 초기 설정 함수
     system("title FoodWarehouse"); //콘솔창 이름 설정
-    system("mode con:cols=50 lines=40"); //콘솔창 크기 설정
+    system("mode con:cols=52 lines=40"); //콘솔창 크기 설정
 
     CONSOLE_CURSOR_INFO ConsoleCursor;
     ConsoleCursor.bVisible = 10; //콘솔창에서 커서의 크기
@@ -197,17 +268,13 @@ void set_console() {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleCursorInfo(consoleHandle, &ConsoleCursor);
 }
-
-//텍스트 컬러 설정 함수
-void textcolor(int color_number) {
+void settingTextColor(int color_number) {//텍스트 컬러 설정 함수
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color_number);
     // 0: 검정 1: 파랑 2: 초록 3: 옥색 4: 빨강 5: 자주색
     // 6: 노랑 7: 하양 8: 회색 9: 연파랑 10: 연초록
     // 11: 연옥색 12: 연빨강 13: 연자주 14: 연노랑 15: 진한 회색
 }
-
-//커서를 해당 좌표로 이동
-void gotoxy(int x, int y) {
+void gotoxy(int x, int y) {//커서를 해당 좌표로 이동
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD Cur;
     Cur.X = x;
@@ -215,73 +282,63 @@ void gotoxy(int x, int y) {
     SetConsoleCursorPosition(consoleHandle, Cur);
 }
 
-//consoleData에 들어있는 화면을 초기화할때 사용하는 함수
-void FillConsole(char str[], char str_s, int max_value) {
-    for (int i = 0; i < max_value; i++) {
-        str[i] = str_s;
-    }
+//메인메뉴
+void displayMainMenu() {
+    UI();
+    gotoxy(16, 8); printf("1. 음식목록");
+    gotoxy(16, 10); printf("2. 음식추가");
+    gotoxy(16, 12); printf("3. 설정");
+    gotoxy(16, 17); printf("0. 종료");
 }
 
-//해당 좌표의 문자(문자열X)를 str로 편집하는 함수
-void EditConsole(int x, int y, char str) {
-    if ((x > 0 && y > 0) && (x - 1 < Console_X_MAX - 1 && y - 1 < Console_Y_MAX - 1)) {
-        consoleData[(y - 1) * Console_X_MAX + x - 1] = str;
-    }
-}
+//음식목록
+void displayFoodList(int str, int n) {
+    UI();
 
-//텍스트를 출력하는 함수
-//x좌표, y좌표, x길이, y길이, 문자열
-void DrawTXT(int x, int y, int size_x, int size_y, char spr[]) {
-    for (int i = 0; i < size_y; i++) {
-        for (int j = 0; j < size_x; j++) {
-            EditConsole(x + j, y + i, spr[i * size_x + j]);
+    cur = first;
+    int a = 1, x = 11, y = 7;
+
+    if (num_food != 0) {
+        if (num_food < 11) n = 1;
+        while (cur != NULL) {
+            if (a < n) {
+                a++;
+                cur = cur->next;
+                continue;
+            }
+            if (a > n + 9) break;
+
+            gotoxy(x, y);
+            if (cur->remaining_days > 0)
+                printf("%d. %s(%d)\n", a, cur->food, cur->remaining_days);
+            else
+                printf("%d. %s(!%d)\n", a, cur->food, cur->remaining_days * -1);
+            cur = cur->next;
+            a++;
+            y++;
         }
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35);
+        if (str == 1)
+            printf("삭제 및 상세정보 확인은 번호 입력");
+        if (str == 2)
+            printf("삭제 - d, 상세정보 확인 - e");
+    }
+
+    else {
+        gotoxy(11, 7);
+        printf("항목이 없습니다.");
+    }
+
+    gotoxy(11, 6);
+    printf("음식 개수: %d", num_food);
+    if (etc == 1) {
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35);
+        printf("%s", etc_str);
     }
 }
-//음식창고 로고를 consoleData에 출력
-void logo() {
-    DrawTXT(1, 1, 6, 2, "음  식창  고");
-}
-//선택 입력칸 '>>' 을 consoleData에 출력
-void selectMenu() {
-    DrawTXT(1, 39, 3, 1, ">> ");
-}
-
-void startMenu() {//메인메뉴 출력함수
-    FillConsole(consoleData, ' ', Max_value);
-
-    DrawTXT(16, 8, 11, 1, "1. 음식목록");
-    DrawTXT(16, 10, 11, 1, "2. 음식추가");
-    DrawTXT(16, 12, 7, 1, "3. 설정");
-    DrawTXT(16, 14, 3, 1, "4. ");
-    DrawTXT(16, 17, 7, 1, "0. 종료");
-
-    logo();
-    selectMenu();
-    //DrawTXT() 함수는 consoleData 배열에만 출력해서 따로 출력해줘야함
-    printf("%s", consoleData);
-    //>> 앞으로 커서를 옮기기 위해서 gotoxy()함수 사용
-    gotoxy(3, 38);
-
-    char num; scanf("%c", &num);
-
-    if (num == '1') {
-        pageStatus = 1;
-    }
-    else if (num == '2') {
-        pageStatus = 2;
-    }
-    else if (num == '3') {
-        pageStatus = 3;
-    }
-    else if (num == '0') {
-        pageStatus = 9;
-        exit(1);
-    }
-    Sleep(50);
-}
-
-void sort_food_list() {
+void sortingFoodList() {
     first = NULL;
     pre = NULL;
     newrec = NULL;
@@ -360,52 +417,6 @@ void sort_food_list() {
 
     num_food = a;
 }
-
-void foodDisplay(int str, int n) {  // 음식목록 화면 출력 함수
-    system("cls");                  // DrawTXT로 받아 consoleData에 쓰는 방법은 작동하지 않아서
-    cur = first;                    // 쓰지 못했습니다..
-    int a = 1, x = 11, y = 7;
-    if (num_food != 0) {
-        if (num_food < 11) n = 1;
-        while (cur != NULL) {
-            if (a < n) {
-                a++;
-                cur = cur->next;
-                continue;
-            }
-            if (a > n + 9) break;
-
-            gotoxy(x, y);
-            if (cur->remaining_days > 0) printf("%d. %s(%d)\n", a, cur->food, cur->remaining_days);
-            else printf("%d. %s(!%d)\n", a, cur->food, cur->remaining_days * -1);
-            cur = cur->next;
-            a++;
-            y++;
-        }
-        gotoxy(0, 35);
-        if (str == 1) printf("삭제 및 상세정보 확인은 번호 입력");
-        if (str == 2) printf("삭제 - d, 상세정보 확인 - e");
-    }
-
-    else {
-        gotoxy(11, 7);
-        printf("항목이 없습니다.");
-    }
-
-    gotoxy(11, 6);
-    printf("음식 개수: %d", num_food);
-    if (etc == 1) {
-        gotoxy(0, 36);
-        printf("%s", etc_str);
-    }
-    gotoxy(0, 0);
-    printf("음  식\n창  고");
-    gotoxy(0, 37);
-    printf("(0)돌아가기\n>>");
-
-    gotoxy(3, 38);
-}
-
 int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - 문자 순)
     int n;
     int str = 1;
@@ -420,7 +431,7 @@ int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - �
         else if (n >= 1 && n <= num_food) {
             while (1) {
                 str = 2;
-                foodDisplay(str, min);
+                displayFoodList(str, min);
                 printf(" ");
                 scanf("%c", &c);
                 getchar();
@@ -477,99 +488,94 @@ int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - �
     return min;
 }
 
-void foodAdd(Food* foods, int* num_food) {
-    FillConsole(consoleData, ' ', Max_value);
+//음식추가
+void addFood(Food* foods, int* num_food) {
+    UI();
 
-    DrawTXT(16, 8, 7, 1, "1. 육류");
-    DrawTXT(16, 10, 9, 1, "2. 유제품");
-    DrawTXT(16, 12, 7, 1, "3. 김치");
-    DrawTXT(16, 14, 7, 1, "4. 음료");
-    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+    gotoxy(16, 8); printf("1. 육류");
+    gotoxy(16, 10); printf("2. 유제품");
+    gotoxy(16, 12); printf("3. 김치");
+    gotoxy(16, 14); printf("4. 음료");
+    gotoxy(2, 35); printf("                              ");
+    gotoxy(2, 35); printf("(0)돌아가기");
 
-    logo();
-    selectMenu();
-    printf("%s", consoleData);
-    gotoxy(3, 40);
+    gotoxy(5, 36);
 
     char name[MAX_NAME_LENGTH];
     char expiration_date[MAX_DATE_LENGTH];
     char note[MAX_NOTE_LENGTH];
     Food newFood;
 
-    int category; scanf("%d", &category);
+    int category = 9;
+    scanf("%d", &category);
+
     if (category == 0) {
         pageStatus = 0;
     }
     else if (category == 1 || category == 2 || category == 4) {
-        FillConsole(consoleData, ' ', Max_value);
-
-        DrawTXT(16, 8, 12, 1, "1. 음식 이름");
-        DrawTXT(16, 10, 12, 1, "2. 소비 기한");
-        DrawTXT(16, 12, 12, 1, "3. 추가 정보");
-        logo();
-        selectMenu();
-
-
-        DrawTXT(1, 38, 15, 1, "1. 음식 이름");
         system("cls");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-        scanf_s("%s", name, 255);
+        UI();
 
+        gotoxy(16, 8); printf("1. 음식 이름");
+        gotoxy(16, 10); printf("2. 소비 기한 (yyyy-mm-dd)");
+        gotoxy(16, 12); printf("3. 추가 정보");
 
-        system("cls");
-        DrawTXT(1, 38, 28, 1, "2. 소비 기한 (ex.2020-12-12)");
-        system("cls");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-        scanf_s("%s", expiration_date, 255);
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("1. 음식 이름");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf("%s", name);
 
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("2. 소비 기한 (yyyy-mm-dd)");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf("%s", expiration_date);
 
-        system("cls");
-        DrawTXT(1, 38, 15, 1, "3. 추가 정보");
-        system("cls");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-        scanf_s("%s", note, 255);
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("3. 추가 정보");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf("%s", note);
+
 
         newFood.category = category;
         strcpy(newFood.name, name);
         strcpy(newFood.expiration_date, expiration_date);
         strcpy(newFood.note, note);
-
         foods[*num_food] = newFood;
         (*num_food)++;
     }
 
     if (category == 3) {
-        FillConsole(consoleData, ' ', Max_value);
-
-        DrawTXT(16, 8, 12, 1, "1. 김치 종류 (aa 배추김치, bb 깍두기, cc 파김치)");
-        DrawTXT(16, 10, 12, 1, "2. 제조 일자 (yyyy-mm-dd)");
-        DrawTXT(16, 12, 12, 1, "3. 특이 사항");
-        logo();
-        selectMenu();
-
-        DrawTXT(1, 38, 28, 1, "1. 김치 종류 (a, b, c)");
-        system("cls");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-
-        scanf_s(" %s", name, 255);
-
-        DrawTXT(1, 38, 28, 1, "2. 제조 일자 (yyyy-mm-dd)");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-
         char manufacture_date[MAX_DATE_LENGTH];
-        scanf_s("%s", manufacture_date, 255);
-
-        DrawTXT(1, 38, 15, 1, "3. 특이 사항");
-        printf("%s", consoleData);
-        gotoxy(3, 40);
-
         char note[MAX_NOTE_LENGTH];
-        scanf_s("%s", note, 255);
+
+        system("cls");
+        UI();
+
+        gotoxy(16, 8); printf("1. 김치 종류");
+        gotoxy(10, 9); printf("(aa 배추김치, bb 깍두기, cc 파김치)");
+        gotoxy(16, 11); printf("2. 제조 일자 (yyyy-mm-dd)");
+        gotoxy(16, 13); printf("3. 추가 정보");
+
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("1. 김치 종류 (a, b, c)");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf(" %s", name);
+
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("2. 제조 일자 (yyyy-mm-dd)");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf("%s", manufacture_date);
+
+        gotoxy(2, 35); printf("                              ");
+        gotoxy(2, 35); printf("3. 추가 정보");
+        gotoxy(5, 36); printf("                              ");
+        gotoxy(5, 36);
+        scanf("%s", note);
 
         int remaining_days = -1; //다른 부분 완성후 연결필요
         if (name[*num_food] == 'a') {
@@ -589,77 +595,49 @@ void foodAdd(Food* foods, int* num_food) {
         foods[*num_food] = newFood;
         (*num_food)++;
     }
-
 }
 
-void displaySetting() {//설정 화면 출력 함수
-    FillConsole(consoleData, ' ', Max_value);
+//설정
+void displaySetting() {
+    UI();
+    gotoxy(16, 8); printf("1. 사용자");
+    gotoxy(16, 10); printf("2. 온도");
+    gotoxy(16, 12); printf("3. 김치 종류");
+    gotoxy(2, 35); printf("                              ");
+    gotoxy(2, 35); printf("(0)돌아가기");
 
-    DrawTXT(16, 8, 9, 1, "1. 사용자");
-    DrawTXT(16, 10, 7, 1, "2. 온도");
-    DrawTXT(16, 12, 12, 1, "3. 김치 종류");
-    DrawTXT(1, 38, 11, 1, "(0)돌아가기");
+    gotoxy(5, 36); printf("                              ");
+    gotoxy(5, 36);
 
-    logo();
-    selectMenu();
-    printf("%s", consoleData);
-    gotoxy(3, 38);
-
-    int category; scanf("%d", &category);
-    if (category == 0) {
-        pageStatus = 0;
+    int category = 999; scanf("%d", &category);
+    switch (category) {
+        case(1):
+            gotoxy(16, 34);
+            printf("사용자 이름");
+            gotoxy(5, 36);
+            Sleep(1000);
+            break;
+        case(2):
+            gotoxy(16, 34);
+            printf("온도");
+            gotoxy(5, 36);
+            Sleep(1000);
+            break;
+        case(3):
+            gotoxy(16, 34);
+            printf("김치 종류");
+            gotoxy(5, 36);
+            Sleep(1000);
+            break;
+        case(0):
+            pageStatus = 0;
+            break;
+        default:
+            gotoxy(5, 36);
+            printf("잘못된 입력입니다.");
+            gotoxy(5, 36);
+            Sleep(1000);
     }
-
 }
 
-//#######################################################################
-
-
-int main(void) {
-    Food foods[MAX_FOODS];
-    int choice;
-
-    srand(time(NULL));
-    set_console();
-    pageStatus = 0;
-
-    while (1) {
-        while (pageStatus == 0) {//메인 메뉴
-            //콘솔창 초기화 함수
-            system("cls");
-            startMenu();
-        }
-        while (pageStatus == 1) {//음식 목록
-            system("cls");
-            sort_food_list();
-            int min = 1;
-            int str = 1;
-            foodDisplay(str, min);
-            while (min != -1) { 
-                foodDisplay(str, min);
-
-                if (GetAsyncKeyState(VK_UP) & 0x8000) {// 위, 아래 방향키로 스크롤 조작
-                    if (min > 1 && min <= num_food - 9) min--;
-                }
-                if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
-                    if (min >= 1 && min < num_food - 9) min++;
-                }
-                if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
-                    etc = 0;
-                    min = input(min);
-                }
-                Sleep(100);
-            }
-            if (min == -1) pageStatus = 0;
-        }
-        while (pageStatus == 2) {//음식 추가
-            system("cls");
-            foodAdd(foods, num_food);
-        }
-        while (pageStatus == 3) {//설정
-            system("cls");
-            displaySetting();
-        }
-    }
-    return(0);
-}
+//#################################################################################
