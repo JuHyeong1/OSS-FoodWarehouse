@@ -20,6 +20,8 @@
 
 int pageStatus = 0;//현재 화면 상태 1: 메인화면 2: 음식목록 3: 음식추가 9:종료
 int num_food = 0;
+int etc = 0;
+char etc_str[MAX_NOTE_LENGTH];
 
 char consoleData[Max_value];
 
@@ -392,7 +394,10 @@ void foodDisplay(int str, int n) {  // 음식목록 화면 출력 함수
 
     gotoxy(11, 6);
     printf("음식 개수: %d", num_food);
-
+    if (etc == 1) {
+        gotoxy(0, 36);
+        printf("%s", etc_str);
+    }
     gotoxy(0, 0);
     printf("음  식\n창  고");
     gotoxy(0, 37);
@@ -422,10 +427,41 @@ int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - �
 
                 if (c == 'd') {
                     if (n == num_food && min <= num_food - 9) min--;
+                    FILE* fp;
+                    cur = first;
+                    for (int a = 1; a < n; a++) {
+                        pre = cur;
+                        cur = cur->next;
+                    }
+                    if (cur == first) {
+                        pre = first;
+                        first = cur->next;
+                        free(pre);
+                    }
+                    else {
+                        pre->next = cur->next;
+                        free(cur);
+                    }
+
+                    fp = fopen("data.txt", "w");
+                    cur = first;
+                    int a = 0;
+                    while (cur != NULL) {
+                        fprintf(fp, "%s&%s&%s\n", cur->food, cur->expiration, cur->etc);
+                        cur = cur->next;
+                        a++;
+                    }
+                    num_food = a;
                     break;
                 }
 
                 else if (c == 'e') {
+                    cur = first;
+                    for (int a = 1; a < n; a++) {
+                        cur = cur->next;
+                    }
+                    etc = 1;
+                    sprintf(etc_str, "%d. %s: %s", n, cur->food, cur->etc);
                     break;
                 }
 
@@ -581,7 +617,6 @@ void displaySetting() {//설정 화면 출력 함수
 
 int main(void) {
     Food foods[MAX_FOODS];
-    int num_food = 0;
     int choice;
 
     srand(time(NULL));
@@ -610,6 +645,7 @@ int main(void) {
                     if (min >= 1 && min < num_food - 9) min++;
                 }
                 if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
+                    etc = 0;
                     min = input(min);
                 }
                 Sleep(100);
