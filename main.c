@@ -1,5 +1,5 @@
 //비주얼 스튜디오 오류 차단
-//#pragma warning(disable:4996)
+#pragma warning(disable:4996)
 
 //#################################################################################
 //헤더 선언
@@ -97,7 +97,6 @@ void main() {
 
     pageStatus = 0;
     while (1) {
-        //pageStatus = 0;
         switch (pageStatus) {
             case 0://메인메뉴
             {//switch 문 안의 case 내에서 변수 선언을 위해서는 중괄호가 필요하다.
@@ -151,11 +150,13 @@ void main() {
                 }
                 if (min == -1)
                     pageStatus = 0;
+                pageStatus = 0;
             }
                 break;
             case 2://음식추가
                 system("cls");
                 addFood(foods, &num_food);
+                pageStatus = 0;
                 break;
             case 3://설정
                 system("cls");
@@ -504,15 +505,17 @@ void addFood(Food* foods, int* num_food) {
     char name[MAX_NAME_LENGTH];
     char expiration_date[MAX_DATE_LENGTH];
     char note[MAX_NOTE_LENGTH];
-    Food newFood;
+    Food newFood = {0, " ", " "};
 
     int category = 9;
+
     scanf("%d", &category);
 
     if (category == 0) {
         pageStatus = 0;
     }
-    else if (category == 1 || category == 2 || category == 4) {
+
+    if (category == 1 || category == 2 || category == 4) {
         system("cls");
         UI();
 
