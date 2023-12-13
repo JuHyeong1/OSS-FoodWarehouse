@@ -98,84 +98,86 @@ void main() {
     pageStatus = 0;
     while (1) {
         switch (pageStatus) {
-            case 0://메인메뉴
-            {//switch 문 안의 case 내에서 변수 선언을 위해서는 중괄호가 필요하다.
-                int num;
-                system("cls");
-                displayMainMenu();
-                gotoxy(5, 36);
-                scanf("%d", &num);
-                switch (num) {
-                case 0:
-                    pageStatus = 9;
-                    break;
-                case 1:
-                case 2:
-                case 3:
-                    pageStatus = num;
-                    break;
-                default:
-                    printf("잘못된 값이 입력되었습니다.");
-                }
-                Sleep(50);
+        case 0://메인메뉴
+        {//switch 문 안의 case 내에서 변수 선언을 위해서는 중괄호가 필요하다.
+            int num;
+            system("cls");
+            displayMainMenu();
+            gotoxy(5, 36);
+            scanf("%d", &num);
+            switch (num) {
+            case 0:
+                pageStatus = 9;
                 break;
-            }
-            case 1://음식목록
-            {
-
-                int min = 1;
-                int str = 1;
-
-                system("cls");
-                sortingFoodList();
-                displayFoodList(str, min);
-
-                while (min != -1) {
-                    system("cls");
-                    displayFoodList(str, min);
-
-                    if (GetAsyncKeyState(VK_UP) & 0x8000) {// 위, 아래 방향키로 스크롤 조작
-                        if (min > 1 && min <= num_food - 9)
-                            min--;
-                    }
-                    if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
-                        if (min >= 1 && min < num_food - 9)
-                            min++;
-                    }
-                    if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
-                        etc = 0;
-                        min = input(min);
-                    }
-                    Sleep(100);
-                }
-                if (min == -1)
-                    pageStatus = 0;
-                pageStatus = 0;
-            }
-                break;
-            case 2://음식추가
-                system("cls");
-                addFood(foods, &num_food);
-                pageStatus = 0;
-                break;
-            case 3://설정
-                system("cls");
-                displaySetting();
-                break;
-            case 9://종료
-                system("cls");
-                gotoxy(1,1);
-                printf("프로그램을 종료합니다.");
-                free(foods);
-                Sleep(10000);
-                exit(0);
+            case 1:
+            case 2:
+            case 3:
+                pageStatus = num;
                 break;
             default:
+                printf("잘못된 값이 입력되었습니다.");
+            }
+            Sleep(50);
+            break;
+        }
+        case 1://음식목록
+        {
+
+            int min = 1;
+            int str = 1;
+
+            system("cls");
+            sortingFoodList();
+            displayFoodList(str, min);
+
+            while (min != -1) {
                 system("cls");
-                UI();
-                gotoxy(26, 20);
-                printf("잘못된 입력입니다.");
-                Sleep(10000);
+                displayFoodList(str, min);
+                gotoxy(2, 35);
+                printf("스페이스바를 눌러 입력 (번호-내용 (0)돌아가기)");
+                gotoxy(5, 36);
+
+                if (GetAsyncKeyState(VK_UP) & 0x8000) {// 위, 아래 방향키로 스크롤 조작
+                    if (min > 1 && min <= num_food - 9)
+                        min--;
+                }
+                if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                    if (min >= 1 && min < num_food - 9)
+                        min++;
+                }
+                if (GetAsyncKeyState(VK_SPACE) & 0x8000) {// 스페이스바를 누른 후 입력 받음.
+                    etc = 0;
+                    min = input(min);
+                }
+                Sleep(100);
+            }
+            if (min == -1)
+                pageStatus = 0;
+        }
+        break;
+        case 2://음식추가
+            system("cls");
+            addFood(foods, &num_food);
+            pageStatus = 0;
+            break;
+        case 3://설정
+            system("cls");
+            displaySetting();
+            break;
+        case 9://종료
+            system("cls");
+            gotoxy(1, 1);
+            printf("프로그램을 종료합니다.");
+            free(foods);
+            Sleep(1000);
+            exit(0);
+            break;
+        default:
+            system("cls");
+            UI();
+            gotoxy(26, 20);
+            printf("잘못된 입력입니다.");
+            Sleep(5000);
         }
     }
     free(foods);
@@ -423,6 +425,7 @@ int input(int min) { // 음식 목록에서 입력을 받는 함수 (정수 - �
     int str = 1;
     char c;
     while (1) {
+        gotoxy(5, 36);
         scanf("%d", &n);
         getchar();
         if (n == 0) {
@@ -505,7 +508,7 @@ void addFood(Food* foods, int* num_food) {
     char name[MAX_NAME_LENGTH];
     char expiration_date[MAX_DATE_LENGTH];
     char note[MAX_NOTE_LENGTH];
-    Food newFood = {0, " ", " "};
+    Food newFood = { 0, " ", " " };
 
     int category = 9;
 
@@ -614,32 +617,32 @@ void displaySetting() {
 
     int category = 999; scanf("%d", &category);
     switch (category) {
-        case(1):
-            gotoxy(16, 34);
-            printf("사용자 이름");
-            gotoxy(5, 36);
-            Sleep(1000);
-            break;
-        case(2):
-            gotoxy(16, 34);
-            printf("온도");
-            gotoxy(5, 36);
-            Sleep(1000);
-            break;
-        case(3):
-            gotoxy(16, 34);
-            printf("김치 종류");
-            gotoxy(5, 36);
-            Sleep(1000);
-            break;
-        case(0):
-            pageStatus = 0;
-            break;
-        default:
-            gotoxy(5, 36);
-            printf("잘못된 입력입니다.");
-            gotoxy(5, 36);
-            Sleep(1000);
+    case(1):
+        gotoxy(16, 34);
+        printf("사용자 이름");
+        gotoxy(5, 36);
+        Sleep(1000);
+        break;
+    case(2):
+        gotoxy(16, 34);
+        printf("온도");
+        gotoxy(5, 36);
+        Sleep(1000);
+        break;
+    case(3):
+        gotoxy(16, 34);
+        printf("김치 종류");
+        gotoxy(5, 36);
+        Sleep(1000);
+        break;
+    case(0):
+        pageStatus = 0;
+        break;
+    default:
+        gotoxy(5, 36);
+        printf("잘못된 입력입니다.");
+        gotoxy(5, 36);
+        Sleep(1000);
     }
 }
 
